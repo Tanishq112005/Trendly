@@ -104,3 +104,80 @@
     transform: rotate(360deg);
   }
 }
+
+.hitlModal {
+  margin-top: 16px;
+  margin-bottom: 24px;
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 20px;
+  width: 100%;
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+  animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.hitlContent h3 {
+  color: var(--accent-color);
+  margin-top: 0;
+  margin-bottom: 8px;
+  font-size: 18px;
+}
+
+.hitlContent p {
+  color: var(--text-primary);
+  margin-bottom: 16px;
+}
+
+.ticketSummary {
+  background-color: var(--bg-dark);
+  padding: 12px;
+  border-radius: 8px;
+  font-size: 14px;
+  color: var(--text-secondary);
+  margin-bottom: 20px;
+  border-left: 3px solid var(--accent-color);
+}
+
+.hitlActions {
+  display: flex;
+  gap: 12px;
+}
+
+.confirmBtn, .cancelBtn {
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s ease;
+}
+
+.confirmBtn {
+  background-color: var(--accent-color);
+  color: #fff;
+}
+
+.confirmBtn:hover {
+  background-color: #7b9ce6;
+}
+
+.cancelBtn {
+  background-color: transparent;
+  color: var(--text-secondary);
+  border: 1px solid var(--border-color);
+}
+
+.cancelBtn:hover {
+  background-color: var(--bg-dark);
+  color: var(--text-primary);
+}

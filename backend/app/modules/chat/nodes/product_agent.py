@@ -1,15 +1,12 @@
 from langchain_core.messages import SystemMessage
-from langchain_groq import ChatGroq
-from app.core.config import GROQ_API_KEY
+from app.core.llm import llm
 from app.modules.chat.state import AgentState
 from app.modules.chat.tools import OrderTools, TicketTools
 
 
 class ProductAgent:
     def __init__(self):
-        self.llm = ChatGroq(
-            api_key=GROQ_API_KEY, model="llama-3.1-8b-instant", temperature=0
-        )
+        self.llm = llm
         # Added TicketTools so the ProductAgent can escalate lost parcels directly
         self.tools = [
             OrderTools.lookup_order,
@@ -21,13 +18,29 @@ class ProductAgent:
 
     def invoke(self, state: AgentState) -> dict:
         """Handles orders and returns using tools."""
-        sys_msg = SystemMessage(content="""You are Trendly's order assistant. 
-1. You MUST ask the user for BOTH their email AND their phone number before executing any tools. If they only give one, ask for the other.
-2. If the user asks for a list of all their orders, use the list_user_orders tool. When you receive the list of orders from the tool, you MUST explicitly output all of them to the user.
-2. IMPORTANT (Sec 1.6): If an order is 'lost_in_transit', you must immediately use the escalate_to_human tool. Do NOT attempt to process a return for it.
-3. IMPORTANT (Sec 1.5): ONLY if an order's status is literally "delayed" and it is >3 business days past its expected delivery, you may inform the user about a ₹250 store credit. Do NOT offer this if the status is "delivered", "in_transit", or anything else.
-4. STRICT RULES: Do NOT offer unauthorized discounts. Do NOT ask for or collect bank details or card numbers. Do NOT confirm orders belonging to a different customer.
-Be polite and concise.""")
+        user_name = state.get("name") or "the customer"
+        user_email = state.get("email") or "Unknown"
+        user_phone = state.get("phone") or "Unknown"
+        
+        orders_info = ""
+        if state.get("orders"):
+            orders_info = "\nCustomer's Orders:\n"
+            for o in state.get("orders"):
+                orders_info += f"- Order ID: {o.get('order_id')}, Status: {o.get('status')}, Expected: {o.get('expected_delivery')}, Items: {', '.join([i.get('name', 'Unknown') for i in o.get('items', [])])}\n"
+        
+        sys_msg_text = f"""You are Trendly's order assistant. You are speaking to {user_name}. Greet them by their name if you know it.
+
+Known Customer Details (from system):
+- Email: {user_email}
+- Phone: {user_phone}{orders_info}
+
+1. If the user asks for a list of their orders or products, explicitly tell them all the orders listed above. If they ask about order status or tracking, you can use the lookup_order tool to get more details if needed.
+2. IMPORTANT (Sec 1.6): If an order is 'lost_in_transit', immediately use the escalate_to_human tool. Do NOT process a return.
+3. IMPORTANT (Sec 1.5): ONLY if an order's status is literally "delayed" and >3 business days past expected delivery, offer a ₹250 store credit. Do NOT offer this if the status is "delivered", "in_transit", etc.
+4. STRICT RULES: Do NOT offer unauthorized discounts. Do NOT ask for bank details.
+5. ANTI-LOOP RULE: If you call a tool and it returns an error, DO NOT call the tool again. Instead, immediately ask the user for clarification or explain the error.
+Be polite and concise."""
+        sys_msg = SystemMessage(content=sys_msg_text)
         response = self.product_llm.invoke([sys_msg] + state["messages"])
         return {"messages": [response]}
 

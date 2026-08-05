@@ -11,7 +11,7 @@ class OrderTools:
     @staticmethod
     @tool
     def lookup_order(order_id: str, email: str, phone: str) -> str:
-        """Look up the details of an order. You MUST ask the user for BOTH their email and phone number first."""
+        """Look up the details of an order using the known customer email and phone."""
         if not OrderService.verify_customer_identity(order_id, email, phone):
             return "Error: Verification failed. The provided email and phone do not match the order records."
         order = OrderService.get_order_by_id(order_id)
@@ -22,7 +22,7 @@ class OrderTools:
     @staticmethod
     @tool
     def list_user_orders(email: str, phone: str) -> str:
-        """Fetch all orders associated with a user. You MUST ask for BOTH email and phone number first."""
+        """Fetch all orders associated with a user using their known email and phone."""
         orders = OrderService.get_orders_by_customer(email, phone)
         if not orders:
             return "No orders found for this email and phone number."
@@ -30,15 +30,16 @@ class OrderTools:
         # We only return high-level details to save tokens
         summary = []
         for o in orders:
+            item_names = ", ".join([item.get("name", "Unknown Item") for item in o.get("items", [])])
             summary.append(
-                f"Order ID: {o.get('order_id')} | Status: {o.get('status')} | Items: {len(o.get('items', []))}"
+                f"Order ID: {o.get('order_id')} | Status: {o.get('status')} | Items: {item_names}"
             )
         return "\n".join(summary)
 
     @staticmethod
     @tool
     def check_return_eligibility(order_id: str, email: str, phone: str) -> str:
-        """Check if an order is eligible for a return or exchange based on the 30-day window and item categories. You MUST ask for BOTH email and phone number first."""
+        """Check if an order is eligible for a return or exchange based on the 30-day window and item categories using the known customer email and phone."""
         if not OrderService.verify_customer_identity(order_id, email, phone):
             return (
                 "Error: Verification failed. The provided email and phone do not match."

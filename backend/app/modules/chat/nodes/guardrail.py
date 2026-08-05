@@ -1,18 +1,20 @@
 import re
 from langchain_core.messages import AIMessage
 from app.modules.chat.state import AgentState
+from langchain_core.messages import HumanMessage
 
 
+
+
+
+## Gaurdrail Agent , Intercepts the user's message before routing and forcefully blocks it if it violates Section 7 of the Trendly Policy.
 class GuardrailAgent:
     def invoke(self, state: AgentState) -> dict:
-        """
-        Intercepts the final AI message before it reaches the user and forcefully
-        replaces it if it violates Section 7 of the Trendly Policy.
-        """
+       
         last_msg = state["messages"][-1]
 
-        # Only scan AI messages (not user input or tool outputs)
-        if not isinstance(last_msg, AIMessage):
+        # Scan the user's incoming message
+        if not isinstance(last_msg, HumanMessage):
             return {}
 
         content = last_msg.content.lower()
@@ -26,7 +28,8 @@ class GuardrailAgent:
                     AIMessage(
                         content="POLICY BLOCK: I am not authorized to collect or discuss bank account numbers, card numbers, or CVVs in chat. Please wait for a human agent to contact you securely."
                     )
-                ]
+                ],
+                "next_node": "END"
             }
 
         # Section 7: Do not offer discounts, coupons, waivers, or goodwill credits
@@ -34,9 +37,10 @@ class GuardrailAgent:
             return {
                 "messages": [
                     AIMessage(
-                        content="POLICY BLOCK: I am not authorized to offer discounts, coupons, waivers, or goodwill credits not defined in the policy."
+                        content="POLICY BLOCK: I cannot discuss or offer unauthorized discounts, coupons, waivers, or goodwill credits."
                     )
-                ]
+                ],
+                "next_node": "END"
             }
 
         # Section 7: Do not give medical, legal, or financial advice
@@ -48,11 +52,11 @@ class GuardrailAgent:
                     AIMessage(
                         content="POLICY BLOCK: I cannot provide medical, legal, or financial advice."
                     )
-                ]
+                ],
+                "next_node": "END"
             }
 
-        # If it passes all checks, return nothing (which tells LangGraph to keep the original message)
-        return {}
-
+        # If safe, route to the router!
+        return {"next_node": "router_node"}
 
 guardrail_agent = GuardrailAgent()

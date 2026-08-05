@@ -9,6 +9,8 @@ import { Sparkles, Trash2 } from 'lucide-react';
 const ChatPage = () => {
   const { sessionId, messages, addMessage, clearMessages } = useChatStore();
   const [isLoading, setIsLoading] = useState(false);
+  const [hitlPending, setHitlPending] = useState(false);
+  const [ticketDetails, setTicketDetails] = useState(null);
   const messagesEndRef = useRef(null);
 
   // Auto-scroll to bottom
@@ -18,22 +20,48 @@ const ChatPage = () => {
 
   useEffect(() => {
     scrollToBottom();
-  }, [messages, isLoading]);
+  }, [messages, isLoading, hitlPending]);
 
-  const handleSendMessage = async (text) => {
-    // 1. Add user message to UI
-    addMessage({ text, isAi: false });
+  const handleSendMessage = async (text, hitlAction = null) => {
+    if (!hitlAction) {
+      addMessage({ text, isAi: false });
+    }
+    
     setIsLoading(true);
 
     try {
-      // 2. Call FastAPI backend
-      const response = await axios.post('http://localhost:8000/api/chat/', {
+      const payload = {
         session_id: sessionId,
-        message: text,
-      });
+      };
+      
+      if (hitlAction) {
+        payload.hitl_action = hitlAction;
+        if (hitlAction === 'confirm') {
+          payload.ticket_details = ticketDetails;
+        }
+        // Optionally add a local message indicating the user's choice
+        addMessage({ 
+          text: `[User ${hitlAction === 'confirm' ? 'confirmed' : 'cancelled'} ticket creation]`, 
+          isAi: false 
+        });
+        setHitlPending(false);
+      } else {
+        payload.message = text;
+      }
 
-      // 3. Add AI response to UI
-      addMessage({ text: response.data.response, isAi: true });
+      const response = await axios.post('http://localhost:8000/api/chat/', payload);
+
+      if (response.data.hitl_pending) {
+        setHitlPending(true);
+        setTicketDetails(response.data.ticket_details);
+      } else {
+        setTicketDetails(null);
+      }
+      
+      if (response.data.response) {
+        addMessage({ text: response.data.response, isAi: true });
+      }
+
     } catch (error) {
       console.error("Chat error:", error);
       addMessage({ 
@@ -74,6 +102,26 @@ const ChatPage = () => {
                 <span>Thinking...</span>
               </div>
             )}
+            
+            {hitlPending && (
+              <div className={styles.hitlModal}>
+                <div className={styles.hitlContent}>
+                  <h3>Confirmation Required</h3>
+                  <p>Are you sure you want to create a support ticket?</p>
+                  {ticketDetails && (
+                    <div className={styles.ticketSummary}>
+                      <strong>Order ID:</strong> {ticketDetails.order_id}<br/>
+                      <strong>Reason:</strong> {ticketDetails.reason}
+                    </div>
+                  )}
+                  <div className={styles.hitlActions}>
+                    <button onClick={() => handleSendMessage(null, 'confirm')} className={styles.confirmBtn}>Yes, Create Ticket</button>
+                    <button onClick={() => handleSendMessage(null, 'cancel')} className={styles.cancelBtn}>No, Cancel</button>
+                  </div>
+                </div>
+              </div>
+            )}
+            
             <div ref={messagesEndRef} />
           </div>
         )}
