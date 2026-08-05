@@ -7,10 +7,6 @@ langgraph-checkpoint-mongodb
 motor
 redis
 python-dotenv
-
-pinecone-client
-langchain-pinecone
-langchain-nomic
 langchain-huggingface
 langchain-community
 langchain-redis
