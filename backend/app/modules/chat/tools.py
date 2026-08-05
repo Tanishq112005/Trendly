@@ -30,7 +30,9 @@ class OrderTools:
         # We only return high-level details to save tokens
         summary = []
         for o in orders:
-            item_names = ", ".join([item.get("name", "Unknown Item") for item in o.get("items", [])])
+            item_names = ", ".join(
+                [item.get("name", "Unknown Item") for item in o.get("items", [])]
+            )
             summary.append(
                 f"Order ID: {o.get('order_id')} | Status: {o.get('status')} | Items: {item_names}"
             )

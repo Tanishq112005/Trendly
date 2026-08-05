@@ -4,13 +4,10 @@ from app.modules.chat.state import AgentState
 from langchain_core.messages import HumanMessage
 
 
-
-
-
 ## Gaurdrail Agent , Intercepts the user's message before routing and forcefully blocks it if it violates Section 7 of the Trendly Policy.
 class GuardrailAgent:
     def invoke(self, state: AgentState) -> dict:
-       
+
         last_msg = state["messages"][-1]
 
         # Scan the user's incoming message
@@ -29,7 +26,7 @@ class GuardrailAgent:
                         content="POLICY BLOCK: I am not authorized to collect or discuss bank account numbers, card numbers, or CVVs in chat. Please wait for a human agent to contact you securely."
                     )
                 ],
-                "next_node": "END"
+                "next_node": "END",
             }
 
         # Section 7: Do not offer discounts, coupons, waivers, or goodwill credits
@@ -40,7 +37,7 @@ class GuardrailAgent:
                         content="POLICY BLOCK: I cannot discuss or offer unauthorized discounts, coupons, waivers, or goodwill credits."
                     )
                 ],
-                "next_node": "END"
+                "next_node": "END",
             }
 
         # Section 7: Do not give medical, legal, or financial advice
@@ -53,10 +50,11 @@ class GuardrailAgent:
                         content="POLICY BLOCK: I cannot provide medical, legal, or financial advice."
                     )
                 ],
-                "next_node": "END"
+                "next_node": "END",
             }
 
         # If safe, route to the router!
         return {"next_node": "router_node"}
+
 
 guardrail_agent = GuardrailAgent()

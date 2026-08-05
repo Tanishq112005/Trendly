@@ -22,7 +22,11 @@ class GraphManager:
     def route_after_router(state: AgentState) -> str:
         intent = state["next_node"]
         if intent in ["product_agent", "ticket_agent"]:
-            if not state.get("email") or not state.get("phone") or state.get("orders") is None:
+            if (
+                not state.get("email")
+                or not state.get("phone")
+                or state.get("orders") is None
+            ):
                 return "information_agent"
         return intent
 
@@ -44,17 +48,19 @@ class GraphManager:
     def _build_graph(self):
         # Nodes
         from app.modules.chat.nodes.guardrail import guardrail_agent
+
         self.builder.add_node("guardrail", guardrail_agent.invoke)
         self.builder.add_node("router_node", router_agent.invoke)
-        
+
         from app.modules.chat.nodes.information_agent import information_agent_graph
+
         self.builder.add_node("information_agent", information_agent_graph)
-        
+
         self.builder.add_node("policy_agent", policy_agent_instance.invoke)
         self.builder.add_node("product_agent", product_agent_instance.invoke)
         self.builder.add_node("ticket_agent", ticket_agent_instance.invoke)
         self.builder.add_node("unrelated_agent", unrelated_agent_instance.invoke)
-        
+
         all_tools = [
             OrderTools.lookup_order,
             OrderTools.check_return_eligibility,
@@ -67,15 +73,17 @@ class GraphManager:
         self.builder.add_conditional_edges(
             START, self.check_exit, {"router_node": "guardrail", END: END}
         )
-        
+
         # Guardrail decides whether to END or proceed to router
         def route_after_guardrail(state: AgentState) -> str:
             return state.get("next_node", "router_node")
 
         self.builder.add_conditional_edges(
-            "guardrail", route_after_guardrail, {"router_node": "router_node", "END": END}
+            "guardrail",
+            route_after_guardrail,
+            {"router_node": "router_node", "END": END},
         )
-        
+
         # From router -> intended agents, or intercepted by information_agent
         self.builder.add_conditional_edges(
             "router_node",
@@ -88,7 +96,7 @@ class GraphManager:
                 "unrelated_agent": "unrelated_agent",
             },
         )
-        
+
         # From information_agent -> END (ask for info) or the intended agent
         self.builder.add_conditional_edges(
             "information_agent",
@@ -96,8 +104,8 @@ class GraphManager:
             {
                 END: END,
                 "product_agent": "product_agent",
-                "ticket_agent": "ticket_agent"
-            }
+                "ticket_agent": "ticket_agent",
+            },
         )
 
         # Output directly to END since Guardrail is now at the front
@@ -113,7 +121,11 @@ class GraphManager:
         self.builder.add_conditional_edges(
             "tools",
             self.route_after_router,
-            {"product_agent": "product_agent", "ticket_agent": "ticket_agent", "information_agent": "information_agent"},
+            {
+                "product_agent": "product_agent",
+                "ticket_agent": "ticket_agent",
+                "information_agent": "information_agent",
+            },
         )
 
         self.graph = self.builder.compile(checkpointer=self.memory)

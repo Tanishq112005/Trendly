@@ -21,13 +21,13 @@ class ProductAgent:
         user_name = state.get("name") or "the customer"
         user_email = state.get("email") or "Unknown"
         user_phone = state.get("phone") or "Unknown"
-        
+
         orders_info = ""
         if state.get("orders"):
             orders_info = "\nCustomer's Orders:\n"
             for o in state.get("orders"):
                 orders_info += f"- Order ID: {o.get('order_id')}, Status: {o.get('status')}, Expected: {o.get('expected_delivery')}, Items: {', '.join([i.get('name', 'Unknown') for i in o.get('items', [])])}\n"
-        
+
         sys_msg_text = f"""You are Trendly's order assistant. You are speaking to {user_name}. Greet them by their name if you know it.
 
 Known Customer Details (from system):
