@@ -1,7 +1,6 @@
 import os
 import logging
 from langchain_redis import RedisVectorStore
-from langchain_nomic.embeddings import NomicEmbeddings
 from langchain_huggingface import HuggingFaceEndpointEmbeddings
 
 class SemanticCache:
@@ -9,22 +8,16 @@ class SemanticCache:
         self.index_name = "trendly_faq_cache"
         self.redis_url = os.getenv("REDIS_URI", "redis://localhost:6379/0")
 
-        # Determine embedding model based on available keys
-        nomic_api = os.getenv("NOMIC_API")
         hf_api = os.getenv("HUGGING_FACE")
 
-        if nomic_api:
-            self.embeddings = NomicEmbeddings(
-                model="nomic-embed-text-v1.5", nomic_api_key=nomic_api
-            )
-        elif hf_api:
+        if hf_api:
             self.embeddings = HuggingFaceEndpointEmbeddings(
                 repo_id="sentence-transformers/all-MiniLM-L6-v2",
                 huggingfacehub_api_token=hf_api,
             )
         else:
             raise ValueError(
-                "No NOMIC_API or HUGGING_FACE api key provided for embeddings."
+                "No HUGGING_FACE api key provided for embeddings."
             )
 
         self.vector_store = RedisVectorStore(
