@@ -2,6 +2,7 @@ import logging
 import redis.asyncio as redis
 from app.core.config import REDIS_URI
 
+
 class RedisManager:
     client = None
 
@@ -19,5 +20,6 @@ class RedisManager:
         if cls.client:
             await cls.client.close()
             logging.info("Disconnected from Redis.")
+
 
 redis_manager = RedisManager()

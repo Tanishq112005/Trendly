@@ -4,6 +4,7 @@ import os
 
 DB_PATH = os.path.join(os.path.dirname(__file__), "../../../data/trendly.db")
 
+
 class DatabaseManager:
     @classmethod
     def init_db(cls):
@@ -26,5 +27,6 @@ class DatabaseManager:
     @classmethod
     def get_connection(cls):
         return sqlite3.connect(DB_PATH)
+
 
 db_manager = DatabaseManager()

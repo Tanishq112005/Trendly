@@ -4,9 +4,12 @@ from app.core.config import GROQ_API_KEY
 from app.modules.chat.state import AgentState
 from app.modules.chat.tools import TicketTools
 
+
 class TicketAgent:
     def __init__(self):
-        self.llm = ChatGroq(api_key=GROQ_API_KEY, model="llama-3.1-8b-instant", temperature=0)
+        self.llm = ChatGroq(
+            api_key=GROQ_API_KEY, model="llama-3.1-8b-instant", temperature=0
+        )
         self.tools = [TicketTools.escalate_to_human]
         self.ticket_llm = self.llm.bind_tools(self.tools)
 
@@ -18,5 +21,6 @@ class TicketAgent:
 """)
         response = self.ticket_llm.invoke([sys_msg] + state["messages"])
         return {"messages": [response]}
+
 
 ticket_agent_instance = TicketAgent()

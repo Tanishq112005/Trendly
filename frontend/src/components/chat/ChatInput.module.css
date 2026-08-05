@@ -1,0 +1,59 @@
+.inputContainer {
+  width: 100%;
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 16px;
+}
+
+.form {
+  display: flex;
+  align-items: center;
+  background-color: var(--bg-surface);
+  border-radius: 30px;
+  padding: 8px 16px;
+  border: 1px solid var(--border-color);
+  transition: border-color 0.2s ease;
+}
+
+.form:focus-within {
+  border-color: var(--text-secondary);
+}
+
+.inputField {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: var(--text-primary);
+  font-size: 16px;
+  font-family: inherit;
+  padding: 8px 0;
+  outline: none;
+}
+
+.inputField::placeholder {
+  color: var(--text-secondary);
+  opacity: 0.7;
+}
+
+.sendButton {
+  background: transparent;
+  border: none;
+  color: var(--border-color);
+  cursor: not-allowed;
+  padding: 8px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.sendButton.active {
+  color: var(--accent-color);
+  cursor: pointer;
+  background-color: rgba(168, 199, 250, 0.1);
+}
+
+.sendButton.active:hover {
+  background-color: rgba(168, 199, 250, 0.2);
+}
