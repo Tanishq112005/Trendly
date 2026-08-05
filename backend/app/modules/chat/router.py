@@ -5,18 +5,7 @@ from app.modules.chat.agent import graph
 from app.core.database import db_manager
 
 
-class ChatRequest(BaseModel):
-    session_id: str
-    message: str | None = None
-    hitl_action: str | None = None  # "confirm" or "cancel"
-    ticket_details: dict | None = None
-
-
-class ChatResponse(BaseModel):
-    response: str
-    session_id: str
-    hitl_pending: bool = False
-    ticket_details: dict | None = None
+from app.modules.chat.schemas import ChatRequest, ChatResponse
 
 
 class ChatController:
@@ -38,15 +27,20 @@ class ChatController:
 
                 if req.hitl_action == "confirm" and req.ticket_details:
                     from app.core.redis_client import redis_manager
-                    
+
                     # Create ticket in MongoDB and embed full chat history state
                     from langchain_core.messages import messages_to_dict
+
                     current_state_dict = state_dict.copy()
                     if "messages" in current_state_dict:
-                        current_state_dict["messages"] = messages_to_dict(current_state_dict["messages"])
-                        
-                    ticket_id = await db_manager.create_ticket(req.session_id, current_state_dict)
-                    
+                        current_state_dict["messages"] = messages_to_dict(
+                            current_state_dict["messages"]
+                        )
+
+                    ticket_id = await db_manager.create_ticket(
+                        req.session_id, current_state_dict
+                    )
+
                     # Trigger the Redis Pub/Sub event for the worker
                     await redis_manager.publish_ticket(req.session_id, ticket_id)
 
@@ -56,16 +50,18 @@ class ChatController:
                         {
                             "messages": [
                                 HumanMessage(content="I confirm. Please proceed."),
-                                AIMessage(content=f"Your support ticket (#{ticket_id}) has been created successfully. A human agent will review it shortly."),
+                                AIMessage(
+                                    content=f"Your support ticket (#{ticket_id}) has been created successfully. A human agent will review it shortly."
+                                ),
                             ],
                             "hitl_pending": False,
                         },
                     )
-                    
+
                     return ChatResponse(
-                        response=f"Your support ticket (#{ticket_id}) has been created successfully. A human agent will review it shortly.", 
-                        session_id=req.session_id, 
-                        hitl_pending=False
+                        response=f"Your support ticket (#{ticket_id}) has been created successfully. A human agent will review it shortly.",
+                        session_id=req.session_id,
+                        hitl_pending=False,
                     )
 
                 elif req.hitl_action == "cancel":
@@ -91,6 +87,19 @@ class ChatController:
                         status_code=400, detail="Message cannot be empty"
                     )
 
+                from app.core.semantic_cache import semantic_cache
+                
+                if semantic_cache:
+                    cached_response = await semantic_cache.check_cache(req.message)
+                    if cached_response:
+                        graph.update_state(
+                            config,
+                            {"messages": [HumanMessage(content=req.message), AIMessage(content=cached_response)]}
+                        )
+                        return ChatResponse(
+                            response=cached_response, session_id=req.session_id, hitl_pending=False
+                        )
+
                 result = graph.invoke(
                     {"messages": [HumanMessage(content=req.message)]}, config=config
                 )
@@ -111,9 +120,16 @@ class ChatController:
             # Normal completion
             messages = state_dict.get("messages", [])
             ai_response = messages[-1].content if messages else ""
-            
+            next_node = state_dict.get("next_node")
+
+            if next_node == "policy_agent" and not req.hitl_action:
+                from app.core.semantic_cache import semantic_cache
+                if semantic_cache:
+                    import asyncio
+                    asyncio.create_task(semantic_cache.store_cache(req.message, ai_response))
+
             # NOTE: We are NO LONGER saving state asynchronously on every message!
-            
+
             return ChatResponse(
                 response=ai_response, session_id=req.session_id, hitl_pending=False
             )

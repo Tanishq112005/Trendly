@@ -4,10 +4,7 @@ from app.core.llm import llm
 from app.modules.chat.state import AgentState
 
 
-class RouterDecision(BaseModel):
-    intent: str = Field(
-        description="The user's intent. Must be exactly 'product_agent', 'ticket_agent', 'policy_agent', or 'unrelated_agent'."
-    )
+from app.modules.chat.schemas import RouterDecision
 
 
 class RouterAgent:

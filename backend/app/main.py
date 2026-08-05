@@ -19,14 +19,19 @@ app.add_middleware(
 async def startup_event():
     # Initialize MongoDB and Redis on startup
     await db_manager.init_db()
-    
+
     from app.core.redis_client import redis_manager
+
     await redis_manager.connect()
+    
+    # Initialize Pinecone
+    from app.core.semantic_cache import semantic_cache
 
 
 # Include Routers
 app.include_router(chat_router)
 from app.modules.admin.router import admin_router
+
 app.include_router(admin_router)
 
 

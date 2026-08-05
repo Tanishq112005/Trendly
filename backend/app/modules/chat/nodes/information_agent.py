@@ -86,7 +86,7 @@ def verify_auth_node(state: AgentState) -> dict:
 
     # Save the name from the fetched orders
     if not state.get("name") and orders:
-        name = orders[0].get("customer_name")
+        name = OrderService.get_customer_name(email, phone)
         if name:
             updates["name"] = name
 

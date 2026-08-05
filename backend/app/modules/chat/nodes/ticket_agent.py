@@ -5,12 +5,7 @@ from app.modules.chat.state import AgentState
 from app.modules.chat.tools import TicketTools
 
 
-class PrepareTicket(BaseModel):
-    """Call this to prepare a ticket before confirmation."""
-
-    order_id: str = Field(description="The order ID")
-    reason: str = Field(description="Brief reason for the ticket")
-    summary: str = Field(description="Summary of the issue")
+from app.modules.chat.schemas import PrepareTicket
 
 
 class TicketAgent:

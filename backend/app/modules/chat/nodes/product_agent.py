@@ -2,7 +2,7 @@ from langchain_core.messages import SystemMessage, AIMessage
 from app.core.llm import llm
 from app.modules.chat.state import AgentState
 from app.modules.chat.tools import OrderTools
-from app.modules.chat.nodes.ticket_agent import PrepareTicket
+from app.modules.chat.schemas import PrepareTicket
 
 
 class ProductAgent:
@@ -27,7 +27,7 @@ class ProductAgent:
         if state.get("orders"):
             orders_info = "\nCustomer's Orders:\n"
             for o in state.get("orders"):
-                orders_info += f"- Order ID: {o.get('order_id')}, Status: {o.get('status')}, Expected: {o.get('expected_delivery')}, Items: {', '.join([i.get('name', 'Unknown') for i in o.get('items', [])])}\n"
+                orders_info += f"- Order ID: {o.order_id}, Status: {o.status}, Expected: {o.expected_delivery}, Items: {', '.join([i.name for i in o.items])}\n"
 
         sys_msg_text = f"""You are Trendly's order assistant. You are speaking to {user_name}. Greet them by their name if you know it.
 
@@ -45,7 +45,7 @@ Known Customer Details (from system):
 Be polite and concise."""
         sys_msg = SystemMessage(content=sys_msg_text)
         response = self.product_llm.invoke([sys_msg] + state["messages"])
-        
+
         # Intercept PrepareTicket tool call for HITL confirmation
         if response.tool_calls:
             for tool_call in response.tool_calls:

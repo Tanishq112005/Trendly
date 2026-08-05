@@ -17,7 +17,7 @@ class OrderTools:
         order = OrderService.get_order_by_id(order_id)
         if not order:
             return "Error: Order not found."
-        return json.dumps(order, indent=2)
+        return json.dumps(order.model_dump(), indent=2)
 
     @staticmethod
     @tool
@@ -31,10 +31,10 @@ class OrderTools:
         summary = []
         for o in orders:
             item_names = ", ".join(
-                [item.get("name", "Unknown Item") for item in o.get("items", [])]
+                [item.name for item in o.items]
             )
             summary.append(
-                f"Order ID: {o.get('order_id')} | Status: {o.get('status')} | Items: {item_names}"
+                f"Order ID: {o.order_id} | Status: {o.status} | Items: {item_names}"
             )
         return "\n".join(summary)
 
@@ -51,12 +51,12 @@ class OrderTools:
         if not order:
             return "Error: Order not found."
 
-        if order.get("status") == "cancelled":
+        if order.status == "cancelled":
             return "Order was cancelled. No return can be raised."
 
-        delivered_at_str = order.get("delivered_at")
+        delivered_at_str = order.delivered_at
         if not delivered_at_str:
-            return f"Order has not been delivered yet. Current status: {order.get('status')}."
+            return f"Order has not been delivered yet. Current status: {order.status}."
 
         delivered_at_str = delivered_at_str.replace("Z", "+00:00")
         delivered_at = datetime.fromisoformat(delivered_at_str)
@@ -76,18 +76,18 @@ class OrderTools:
         report = [
             f"Order delivered {days_since_delivery} days ago. Within 30-day window."
         ]
-        for item in order.get("items", []):
-            cat = item.get("category", "").lower()
+        for item in order.items:
+            cat = item.category.lower()
             if cat in non_returnable:
                 report.append(
-                    f"- {item['name']}: NOT ELIGIBLE (Non-returnable category: '{cat}')."
+                    f"- {item.name}: NOT ELIGIBLE (Non-returnable category: '{cat}')."
                 )
-            elif item.get("final_sale"):
+            elif item.final_sale:
                 report.append(
-                    f"- {item['name']}: ELIGIBLE FOR SIZE EXCHANGE ONLY (Final sale item)."
+                    f"- {item.name}: ELIGIBLE FOR SIZE EXCHANGE ONLY (Final sale item)."
                 )
             else:
-                report.append(f"- {item['name']}: ELIGIBLE for return or exchange.")
+                report.append(f"- {item.name}: ELIGIBLE for return or exchange.")
 
         return "\n".join(report)
 
