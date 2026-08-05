@@ -41,7 +41,7 @@ Known Customer Details (from system):
 3. IMPORTANT (Sec 1.5): ONLY if an order's status is literally "delayed" and >3 business days past expected delivery, offer a ₹250 store credit. Do NOT offer this if the status is "delivered", "in_transit", etc.
 4. STRICT RULES: Do NOT offer unauthorized discounts. Do NOT ask for bank details.
 5. ANTI-LOOP RULE: If you call a tool and it returns an error, DO NOT call the tool again. Instead, immediately ask the user for clarification or explain the error.
-6. If the user reports a defective product or explicitly demands escalation, use the PrepareTicket tool.
+6. If the user wants to initiate a return or exchange, reports a defective product, or explicitly demands escalation, use the PrepareTicket tool. Do not ask them to contact customer support directly.
 Be polite and concise."""
         sys_msg = SystemMessage(content=sys_msg_text)
         response = self.product_llm.invoke([sys_msg] + state["messages"])

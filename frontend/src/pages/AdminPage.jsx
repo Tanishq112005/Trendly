@@ -10,7 +10,7 @@ const AdminPage = () => {
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
-      const res = await fetch('http://localhost:8000/api/admin/login', {
+      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/admin/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password })
@@ -28,7 +28,7 @@ const AdminPage = () => {
 
   const fetchTickets = async () => {
     try {
-      const res = await fetch('http://localhost:8000/api/admin/tickets');
+      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/admin/tickets`);
       const data = await res.json();
       setTickets(data);
     } catch (err) {
@@ -39,7 +39,7 @@ const AdminPage = () => {
   const handleResolve = async (ticketId) => {
     const resolution = resolutionText[ticketId] || 'Resolved by admin.';
     try {
-      await fetch(`http://localhost:8000/api/admin/tickets/${ticketId}/resolve`, {
+      await fetch(`${import.meta.env.VITE_API_BASE_URL}/admin/tickets/${ticketId}/resolve`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ resolution })

@@ -48,7 +48,7 @@ const ChatPage = () => {
         payload.message = text;
       }
 
-      const response = await axios.post('http://localhost:8000/api/chat/', payload);
+      const response = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/chat/`, payload);
 
       if (response.data.hitl_pending) {
         setHitlPending(true);

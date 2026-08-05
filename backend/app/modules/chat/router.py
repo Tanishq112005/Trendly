@@ -36,6 +36,11 @@ class ChatController:
                         current_state_dict["messages"] = messages_to_dict(
                             current_state_dict["messages"]
                         )
+                    if "orders" in current_state_dict and current_state_dict["orders"]:
+                        current_state_dict["orders"] = [
+                            order.model_dump() if hasattr(order, "model_dump") else (order.dict() if hasattr(order, "dict") else order)
+                            for order in current_state_dict["orders"]
+                        ]
 
                     ticket_id = await db_manager.create_ticket(
                         req.session_id, current_state_dict
