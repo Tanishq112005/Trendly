@@ -1,18 +1,19 @@
-from langchain_core.messages import SystemMessage
+from langchain_core.messages import SystemMessage, AIMessage
 from app.core.llm import llm
 from app.modules.chat.state import AgentState
-from app.modules.chat.tools import OrderTools, TicketTools
+from app.modules.chat.tools import OrderTools
+from app.modules.chat.nodes.ticket_agent import PrepareTicket
 
 
 class ProductAgent:
     def __init__(self):
         self.llm = llm
-        # Added TicketTools so the ProductAgent can escalate lost parcels directly
+        # Use PrepareTicket so we can intercept and ask for user confirmation
         self.tools = [
             OrderTools.lookup_order,
             OrderTools.check_return_eligibility,
             OrderTools.list_user_orders,
-            TicketTools.escalate_to_human,
+            PrepareTicket,
         ]
         self.product_llm = self.llm.bind_tools(self.tools)
 
@@ -32,17 +33,33 @@ class ProductAgent:
 
 Known Customer Details (from system):
 - Email: {user_email}
-- Phone: {user_phone}{orders_info}
+- Phone: {user_phone}
+- orderlist : {orders_info}
 
 1. If the user asks for a list of their orders or products, explicitly tell them all the orders listed above. If they ask about order status or tracking, you can use the lookup_order tool to get more details if needed.
-2. IMPORTANT (Sec 1.6): If an order is 'lost_in_transit', immediately use the escalate_to_human tool. Do NOT process a return.
+2. IMPORTANT (Sec 1.6): If an order is 'lost_in_transit', immediately use the PrepareTicket tool. Do NOT process a return.
 3. IMPORTANT (Sec 1.5): ONLY if an order's status is literally "delayed" and >3 business days past expected delivery, offer a ₹250 store credit. Do NOT offer this if the status is "delivered", "in_transit", etc.
 4. STRICT RULES: Do NOT offer unauthorized discounts. Do NOT ask for bank details.
 5. ANTI-LOOP RULE: If you call a tool and it returns an error, DO NOT call the tool again. Instead, immediately ask the user for clarification or explain the error.
+6. If the user reports a defective product or explicitly demands escalation, use the PrepareTicket tool.
 Be polite and concise."""
         sys_msg = SystemMessage(content=sys_msg_text)
         response = self.product_llm.invoke([sys_msg] + state["messages"])
-        return {"messages": [response]}
+        
+        # Intercept PrepareTicket tool call for HITL confirmation
+        if response.tool_calls:
+            for tool_call in response.tool_calls:
+                if tool_call["name"] == "PrepareTicket":
+                    hitl_msg = AIMessage(
+                        content="I have prepared the ticket for your issue. Please confirm if you'd like me to create it."
+                    )
+                    return {
+                        "messages": [hitl_msg],
+                        "hitl_pending": True,
+                        "ticket_details": tool_call["args"],
+                    }
+
+        return {"messages": [response], "hitl_pending": False}
 
 
 product_agent_instance = ProductAgent()

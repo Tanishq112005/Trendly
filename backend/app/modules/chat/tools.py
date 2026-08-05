@@ -99,12 +99,4 @@ class TicketTools:
         session_id: str, order_id: str, reason: str, summary: str
     ) -> str:
         """Escalate the conversation to a human support agent."""
-        conn = db_manager.get_connection()
-        cursor = conn.cursor()
-        cursor.execute(
-            "INSERT INTO tickets (session_id, summary) VALUES (?, ?)",
-            (session_id, f"Order: {order_id} | Reason: {reason} | Summary: {summary}"),
-        )
-        conn.commit()
-        conn.close()
-        return "SUCCESS: Ticket created."
+        return "SUCCESS: Escalation requested."

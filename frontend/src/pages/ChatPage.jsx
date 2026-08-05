@@ -4,7 +4,7 @@ import ChatBubble from '../components/chat/ChatBubble';
 import ChatInput from '../components/chat/ChatInput';
 import { useChatStore } from '../store/chatStore';
 import styles from './ChatPage.module.css';
-import { Sparkles, Trash2 } from 'lucide-react';
+import { Sparkles, Trash2, Shield } from 'lucide-react';
 
 const ChatPage = () => {
   const { sessionId, messages, addMessage, clearMessages } = useChatStore();
@@ -39,7 +39,6 @@ const ChatPage = () => {
         if (hitlAction === 'confirm') {
           payload.ticket_details = ticketDetails;
         }
-        // Optionally add a local message indicating the user's choice
         addMessage({ 
           text: `[User ${hitlAction === 'confirm' ? 'confirmed' : 'cancelled'} ticket creation]`, 
           isAi: false 
@@ -80,9 +79,14 @@ const ChatPage = () => {
           <Sparkles size={24} color="var(--accent-color)" />
           <span>Trendly AI</span>
         </div>
-        <button onClick={clearMessages} className={styles.clearBtn} title="Clear Chat">
-          <Trash2 size={18} />
-        </button>
+        <div style={{ display: 'flex', gap: '8px' }}>
+          <button onClick={() => window.location.href = '/admin'} className={styles.clearBtn} title="Admin Dashboard">
+            <Shield size={18} />
+          </button>
+          <button onClick={clearMessages} className={styles.clearBtn} title="Clear Chat">
+            <Trash2 size={18} />
+          </button>
+        </div>
       </header>
 
       <main className={styles.chatArea}>

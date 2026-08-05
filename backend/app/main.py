@@ -17,12 +17,17 @@ app.add_middleware(
 
 @app.on_event("startup")
 async def startup_event():
-    # Initialize SQLite database for tickets on startup
-    db_manager.init_db()
+    # Initialize MongoDB and Redis on startup
+    await db_manager.init_db()
+    
+    from app.core.redis_client import redis_manager
+    await redis_manager.connect()
 
 
 # Include Routers
 app.include_router(chat_router)
+from app.modules.admin.router import admin_router
+app.include_router(admin_router)
 
 
 @app.get("/health")

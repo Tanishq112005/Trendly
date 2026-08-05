@@ -1,7 +1,8 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, BackgroundTasks
 from pydantic import BaseModel
-from langchain_core.messages import HumanMessage
+from langchain_core.messages import HumanMessage, AIMessage
 from app.modules.chat.agent import graph
+from app.core.database import db_manager
 
 
 class ChatRequest(BaseModel):
@@ -36,10 +37,18 @@ class ChatController:
                 state_dict = graph.get_state(config).values
 
                 if req.hitl_action == "confirm" and req.ticket_details:
-                    # Manually execute the tool since the agent was detached
-                    from app.modules.chat.tools import TicketTools
-
-                    res = TicketTools.escalate_to_human.invoke(req.ticket_details)
+                    from app.core.redis_client import redis_manager
+                    
+                    # Create ticket in MongoDB and embed full chat history state
+                    from langchain_core.messages import messages_to_dict
+                    current_state_dict = state_dict.copy()
+                    if "messages" in current_state_dict:
+                        current_state_dict["messages"] = messages_to_dict(current_state_dict["messages"])
+                        
+                    ticket_id = await db_manager.create_ticket(req.session_id, current_state_dict)
+                    
+                    # Trigger the Redis Pub/Sub event for the worker
+                    await redis_manager.publish_ticket(req.session_id, ticket_id)
 
                     # Update state with the result and clear hitl_pending
                     graph.update_state(
@@ -47,13 +56,16 @@ class ChatController:
                         {
                             "messages": [
                                 HumanMessage(content="I confirm. Please proceed."),
-                                AIMessage(content=res),
+                                AIMessage(content=f"Your support ticket (#{ticket_id}) has been created successfully. A human agent will review it shortly."),
                             ],
                             "hitl_pending": False,
                         },
                     )
+                    
                     return ChatResponse(
-                        response=res, session_id=req.session_id, hitl_pending=False
+                        response=f"Your support ticket (#{ticket_id}) has been created successfully. A human agent will review it shortly.", 
+                        session_id=req.session_id, 
+                        hitl_pending=False
                     )
 
                 elif req.hitl_action == "cancel":
@@ -99,6 +111,9 @@ class ChatController:
             # Normal completion
             messages = state_dict.get("messages", [])
             ai_response = messages[-1].content if messages else ""
+            
+            # NOTE: We are NO LONGER saving state asynchronously on every message!
+            
             return ChatResponse(
                 response=ai_response, session_id=req.session_id, hitl_pending=False
             )
