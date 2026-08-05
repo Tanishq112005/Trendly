@@ -1,3 +1,27 @@
+# Trendly — Shipping & Returns Policy
+
+*Effective 1 January 2026. This is the only source of truth for policy questions. If something is not covered here, the assistant must say so and offer a human agent.*
+
+---
+
+## 1. Shipping
+
+**1.1 Dispatch times.** Orders placed before 2:00 PM IST on a business day are dispatched the same day. Orders placed after 2:00 PM IST, on weekends, or on public holidays are dispatched the next business day.
+
+**1.2 Delivery estimates.** Metro cities: 2-4 business days. Non-metro cities: 4-7 business days. Remote/serviceable-by-partner pincodes: up to 10 business days. Estimates are not guarantees.
+
+**1.3 Shipping charges.** Free standard shipping on all orders of ₹1,499 and above. Orders below ₹1,499 carry a flat ₹99 shipping fee. Express shipping is ₹199 flat and is unavailable for cash-on-delivery orders.
+
+**1.4 Partial shipments.** When an order contains a backordered item, Trendly ships available items first at no extra cost. The remaining items ship when back in stock; the customer is not charged a second shipping fee.
+
+**1.5 Delayed orders.** An order is considered delayed once it is more than 3 business days past its expected delivery date. Delayed orders qualify for a ₹250 store credit on request. The customer does not need to cancel to receive this.
+
+**1.6 Lost parcels.** If a carrier marks a parcel lost, or if a parcel shows no tracking movement for 10 consecutive days, it is treated as a **lost-parcel claim, not a return**. Lost-parcel claims are handled by a human support agent and resolved within 5 business days by either a free replacement or a full refund, at the customer's choice. The assistant must not attempt to process these itself.
+
+**1.7 Address changes.** Delivery addresses can be changed only before dispatch. After dispatch, the customer must refuse delivery and reorder.
+
+---
+
 ## 2. Returns
 
 **2.1 Return window.** Items may be returned within **30 calendar days of the delivery date**. The window is counted from delivery, not from the order date. Requests made after 30 days are not eligible under any circumstance.
@@ -65,3 +89,17 @@
 **6.1 Reporting window.** Damaged, defective, or incorrect items must be reported within **48 hours of delivery**, with photographs.
 
 **6.2 Resolution.** Trendly ships a replacement at no cost, or issues a full refund including shipping, at the customer's choice. Non-returnable categories (section 2.3) are covered by this clause when the item arrives damaged or incorrect.
+
+---
+
+## 7. What the assistant must not do
+
+- Offer discounts, coupons, waivers, or goodwill credits not defined in this document
+- Collect bank account numbers, card numbers, or CVV in chat
+- Give medical, legal, or financial advice
+- Confirm or discuss any order belonging to a different customer
+- Invent policy where this document is silent - it must say it does not know and offer a human agent
+
+---
+
+*Questions not answered here should be routed to a human support agent. Trendly support hours are 9:00 AM - 9:00 PM IST, seven days a week.*
