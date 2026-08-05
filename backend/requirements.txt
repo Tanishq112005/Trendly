@@ -1,0 +1,9 @@
+fastapi
+uvicorn
+langchain
+langgraph
+langchain-groq
+langgraph-checkpoint-mongodb
+motor
+redis
+python-dotenv
