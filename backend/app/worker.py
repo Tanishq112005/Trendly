@@ -83,28 +83,30 @@ async def generate_ticket_summary(session_id: str, ticket_id: str):
 async def listen_for_events():
     """Subscribe to Redis and listen for ticket_events."""
     await db_manager.init_db()
-    await redis_manager.connect()
+    
+    logger.info("Background worker is starting...")
 
-    pubsub = redis_manager.client.pubsub()
-    await pubsub.subscribe("ticket_events")
+    while True:
+        try:
+            await redis_manager.connect()
+            # ping_interval=60 prevents idle connections from being closed by Render/Redis
+            pubsub = redis_manager.client.pubsub(ping_interval=60)
+            await pubsub.subscribe("ticket_events")
 
-    logger.info("Background worker is listening for events...")
+            logger.info("Background worker is listening for events...")
 
-    try:
-        async for message in pubsub.listen():
-            if message["type"] == "message":
-                data = json.loads(message["data"])
-                session_id = data.get("session_id")
-                ticket_id = data.get("ticket_id")
+            async for message in pubsub.listen():
+                if message["type"] == "message":
+                    data = json.loads(message["data"])
+                    session_id = data.get("session_id")
+                    ticket_id = data.get("ticket_id")
 
-                if session_id and ticket_id:
-                    # Run summarization asynchronously
-                    asyncio.create_task(generate_ticket_summary(session_id, ticket_id))
-    except Exception as e:
-        logger.error(f"Error in Redis listener: {e}")
-    finally:
-        await pubsub.unsubscribe("ticket_events")
-        await redis_manager.disconnect()
+                    if session_id and ticket_id:
+                        # Run summarization asynchronously
+                        asyncio.create_task(generate_ticket_summary(session_id, ticket_id))
+        except Exception as e:
+            logger.error(f"Error in Redis listener: {e}. Reconnecting in 5 seconds...")
+            await asyncio.sleep(5)
 
 
 if __name__ == "__main__":
