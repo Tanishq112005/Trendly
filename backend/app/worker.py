@@ -89,8 +89,7 @@ async def listen_for_events():
     while True:
         try:
             await redis_manager.connect()
-            # ping_interval=60 prevents idle connections from being closed by Render/Redis
-            pubsub = redis_manager.client.pubsub(ping_interval=60)
+            pubsub = redis_manager.client.pubsub()
             await pubsub.subscribe("ticket_events")
 
             logger.info("Background worker is listening for events...")
