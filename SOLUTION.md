@@ -19,6 +19,7 @@ Instead of a single massive LLM prompt, the system relies on specialized sub-age
 - **Groq LLM (Free Tier) vs. OpenAI:** We opted for Groq (Llama-3) to keep costs at zero. However, Groq's strict rate limits (429 errors) and fragile function-calling parsing necessitated custom anti-loop prompts and `try/except` fallbacks that wouldn't be strictly necessary with GPT-4.
 - **In-Memory Checkpointing vs. Persistent DB:** LangGraph state is currently managed using `MemorySaver()`. While this is extremely fast for local testing, it prevents horizontal scaling. A production environment would require swapping this for a Persistent Checkpointer (like PostgreSQL or MongoDB).
 - **FastAPI BackgroundTasks vs. Dedicated Queue:** We opted to handle asynchronous embedding generation for the semantic cache using FastAPI's lightweight `BackgroundTasks` rather than a robust worker queue (like Celery + Redis). This keeps the project easily deployable on a single free-tier Render server.
+- **Render Server Sleep Problem** I use the render server for the backend deployment , so it might we chances that the first messages comes in very later , it might take 50 sec to 1 min, because the Render Server goes in the sleep mode , if it is not use.
 
 ## 3. Known Limitations
 - **Rate Limits:** Rapid consecutive messages will trigger Groq's rate limits, causing the server to pause and wait for the limit window to reset.
