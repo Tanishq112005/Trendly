@@ -26,27 +26,31 @@ class ProductAgent:
         current_order_id = state.get("current_order_id")
         current_sku = state.get("current_sku")
         
-        active_order_context = "No specific order context provided."
-        if current_order_id and state.get("orders"):
-            for o in state.get("orders"):
-                if getattr(o, "order_id", None) == current_order_id or (isinstance(o, dict) and o.get("order_id") == current_order_id):
-                    # We found the specific order the user is asking about
-                    import json
-                    order_dict = o.model_dump() if hasattr(o, "model_dump") else (o.dict() if hasattr(o, "dict") else o)
-                    active_order_context = json.dumps(order_dict, indent=2)
-                    break
-        elif state.get("orders"):
-            # If no specific order ID is targeted, just list the IDs briefly
-            active_order_context = "User's Orders: " + ", ".join([
+        all_orders_summary = "No orders found."
+        active_order_context = "No specific active order."
+        
+        if state.get("orders"):
+            # Always list all order IDs
+            all_orders_summary = "All User Orders: " + ", ".join([
                 (getattr(o, "order_id", "") or (o.get("order_id") if isinstance(o, dict) else ""))
                 for o in state.get("orders")
             ])
+            
+            # If there's a specific order in focus, provide its full details
+            if current_order_id:
+                for o in state.get("orders"):
+                    if getattr(o, "order_id", None) == current_order_id or (isinstance(o, dict) and o.get("order_id") == current_order_id):
+                        import json
+                        order_dict = o.model_dump() if hasattr(o, "model_dump") else (o.dict() if hasattr(o, "dict") else o)
+                        active_order_context = json.dumps(order_dict, indent=2)
+                        break
 
         sys_msg_text = f"""You are Trendly's order assistant. You are speaking to {user_name}. Greet them by their name if you know it.
 
 Known Customer Details (from system):
 - Email: {user_email}
 - Phone: {user_phone}
+- {all_orders_summary}
 - Active Order Context:
 {active_order_context}
 - Active SKU Mentioned: {current_sku if current_sku else "None"}
