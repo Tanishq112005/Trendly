@@ -242,4 +242,7 @@ This project was built with the assistance of advanced LLMs (Claude/GPT) for:
 - Debugging edge cases like Pydantic AttributeErrors and Groq tool-calling JSON parsing failures.
 - Designing the Semantic Caching layer with LangChain Redis.
 
+## Render Problem 
+- It Might we chance that the you did not get the message too fast in the first attempt , because the i deploy on the render server , and it takes 50 sec time to wakes up
+
 *Human oversight was strictly maintained to enforce guardrails, structure the conversational state graph, and design the HITL (Human-in-the-Loop) intercepts.*
