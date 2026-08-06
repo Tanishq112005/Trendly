@@ -7,18 +7,18 @@ Instead of a single massive LLM prompt, the system relies on specialized sub-age
 - **Information Agent:** Extracts and validates authentication details (Email & Phone).
 - **Product Agent:** Handles transactional logic (order lookup, returns, cancellations).
 - **Policy Agent:** Answers static questions (shipping times, return policies) using RAG.
-- **Guardrail Agent:** Rejects out-of-bounds requests.
+- **Unrelated Agent:** Rejects out-of-bounds requests and off-topic trivia.
 
 **Data Flow:**
-1. **Semantic Cache Check:** FastAPI intercepts incoming requests. If the request semantically matches a previously answered policy question, the Redis Vector cache returns the answer immediately in <50ms (saving LLM cost and time).
+1. **Semantic Cache Check:** FastAPI intercepts incoming requests. If the request semantically matches a previously answered policy question, the Pinecone Vector DB returns the cached answer immediately in <100ms (saving LLM cost and time).
 2. **LangGraph Processing:** If no cache hit, the query enters the StateGraph, gets routed to the appropriate agent, and tools are executed.
 3. **HITL Intercept:** If a tool triggers a human escalation, the state is paused, and the LLM response is returned for user confirmation.
-4. **Cache Storage:** If the query was a policy question, the LLM's response is asynchronously saved back into the Redis Vector Store.
+4. **Cache Storage:** If the query was a policy question, the LLM's response is asynchronously saved back into the Pinecone Vector Store.
 
 ## 2. Key Trade-offs
 - **Groq LLM (Free Tier) vs. OpenAI:** We opted for Groq (Llama-3) to keep costs at zero. However, Groq's strict rate limits (429 errors) and fragile function-calling parsing necessitated custom anti-loop prompts and `try/except` fallbacks that wouldn't be strictly necessary with GPT-4.
-- **In-Memory Checkpointing vs. Persistent DB:** LangGraph state is currently managed using `MemorySaver()`. While this is extremely fast for local testing, it prevents horizontal scaling. A production environment would require swapping this for `MongoDBSaver`.
-- **FastAPI BackgroundTasks vs. Celery:** We initially built a robust Celery + Redis worker queue to handle asynchronous embedding generation for the semantic cache. However, to keep the project easily deployable on a single free-tier Render server (512MB RAM), we reverted to FastAPI's lightweight `BackgroundTasks`.
+- **In-Memory Checkpointing vs. Persistent DB:** LangGraph state is currently managed using `MemorySaver()`. While this is extremely fast for local testing, it prevents horizontal scaling. A production environment would require swapping this for a Persistent Checkpointer (like PostgreSQL or MongoDB).
+- **FastAPI BackgroundTasks vs. Dedicated Queue:** We opted to handle asynchronous embedding generation for the semantic cache using FastAPI's lightweight `BackgroundTasks` rather than a robust worker queue (like Celery + Redis). This keeps the project easily deployable on a single free-tier Render server.
 
 ## 3. Known Limitations
 - **Rate Limits:** Rapid consecutive messages will trigger Groq's rate limits, causing the server to pause and wait for the limit window to reset.
