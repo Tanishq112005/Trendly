@@ -1,12 +1,13 @@
 import json
-from datetime import datetime
+from datetime import datetime, timezone
+import zoneinfo
 from langchain_core.tools import tool
 from app.modules.orders.service import OrderService
 from app.core.database import db_manager
 
 
 class OrderTools:
-    SIMULATED_CURRENT_DATE = datetime.fromisoformat("2026-08-05T00:00:00+00:00")
+    SIMULATED_CURRENT_DATE = datetime.now(zoneinfo.ZoneInfo("Asia/Kolkata"))
 
     @staticmethod
     @tool
