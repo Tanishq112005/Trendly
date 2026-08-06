@@ -45,3 +45,60 @@
   color: var(--text-primary);
   border-bottom-right-radius: 4px;
 }
+.markdownContent {
+  font-family: inherit;
+  line-height: 1.5;
+  white-space: normal;
+}
+
+.markdownContent p {
+  margin-top: 0;
+  margin-bottom: 0.75rem;
+}
+
+.markdownContent p:last-child {
+  margin-bottom: 0;
+}
+
+.markdownContent strong {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.markdownContent ul, .markdownContent ol {
+  margin-top: 0.5rem;
+  margin-bottom: 0.75rem;
+  padding-left: 1.5rem;
+}
+
+.markdownContent li {
+  margin-bottom: 0.25rem;
+}
+
+/* Markdown Tables */
+.markdownContent table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1rem 0;
+  font-size: 0.9em;
+  border-radius: 4px;
+  overflow: hidden;
+  box-shadow: 0 0 0 1px var(--border-color);
+}
+
+.markdownContent th,
+.markdownContent td {
+  padding: 0.75rem;
+  text-align: left;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.markdownContent th {
+  background-color: rgba(255, 255, 255, 0.05);
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.markdownContent tr:last-child td {
+  border-bottom: none;
+}

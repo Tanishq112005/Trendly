@@ -33,7 +33,8 @@ structured_llm = llm.with_structured_output(ExtractionDecision)
 
 
 def extract_node(state: AgentState) -> dict:
-    extraction = (prompt | structured_llm).invoke({"messages": state["messages"]})
+    recent_messages = state["messages"][-10:] if len(state["messages"]) > 10 else state["messages"]
+    extraction = (prompt | structured_llm).invoke({"messages": recent_messages})
     return {
         "temp_extracted_email": extraction.extracted_email,
         "temp_extracted_phone": extraction.extracted_phone,

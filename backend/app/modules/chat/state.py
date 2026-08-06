@@ -15,3 +15,5 @@ class AgentState(TypedDict, total=False):
     temp_extracted_email: Optional[str]
     temp_extracted_phone: Optional[str]
     temp_extracted_name: Optional[str]
+    current_order_id: Optional[str]
+    current_sku: Optional[str]

@@ -9,5 +9,5 @@ redis==7.4.1
 python-dotenv==1.2.2
 langchain-huggingface==1.2.2
 langchain-community==0.4.2
-langchain-redis==0.2.5
+langchain-pinecone==0.2.13
 honcho==2.0.0

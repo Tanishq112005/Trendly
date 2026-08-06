@@ -34,7 +34,8 @@ class RouterAgent:
 
         # Use the LCEL chain to invoke the structured LLM
         decision = prompt | self.structured_llm
-        result = decision.invoke({"messages": state["messages"]})
+        recent_messages = state["messages"][-10:] if len(state["messages"]) > 10 else state["messages"]
+        result = decision.invoke({"messages": recent_messages})
 
         return {"next_node": result.intent}
 

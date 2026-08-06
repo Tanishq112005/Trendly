@@ -108,8 +108,19 @@ async def listen_for_events():
             await asyncio.sleep(5)
 
 
+import signal
+import sys
+
+def handle_shutdown(signum, frame):
+    logger.info("Received termination signal. Shutting down gracefully...")
+    sys.exit(0)
+
 if __name__ == "__main__":
+    # Ensure we die instantly when Render/Honcho sends a termination signal
+    signal.signal(signal.SIGTERM, handle_shutdown)
+    signal.signal(signal.SIGINT, handle_shutdown)
+    
     try:
         asyncio.run(listen_for_events())
-    except KeyboardInterrupt:
+    except (KeyboardInterrupt, SystemExit):
         logger.info("Worker stopped.")

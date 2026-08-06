@@ -46,8 +46,8 @@ class GraphManager:
         return "router_node"
 
     def _build_graph(self):
-        # Nodes
         from app.modules.chat.nodes.guardrail import guardrail_agent
+        from app.modules.chat.nodes.order_extractor import order_extractor_node
 
         self.builder.add_node("guardrail", guardrail_agent.invoke)
         self.builder.add_node("router_node", router_agent.invoke)
@@ -55,6 +55,8 @@ class GraphManager:
         from app.modules.chat.nodes.information_agent import information_agent_graph
 
         self.builder.add_node("information_agent", information_agent_graph)
+        
+        self.builder.add_node("order_extractor", order_extractor_node)
 
         self.builder.add_node("policy_agent", policy_agent_instance.invoke)
         self.builder.add_node("product_agent", product_agent_instance.invoke)
@@ -90,7 +92,7 @@ class GraphManager:
             self.route_after_router,
             {
                 "information_agent": "information_agent",
-                "product_agent": "product_agent",
+                "product_agent": "order_extractor",
                 "policy_agent": "policy_agent",
                 "ticket_agent": "ticket_agent",
                 "unrelated_agent": "unrelated_agent",
@@ -103,10 +105,13 @@ class GraphManager:
             self.route_after_info,
             {
                 END: END,
-                "product_agent": "product_agent",
+                "product_agent": "order_extractor",
                 "ticket_agent": "ticket_agent",
             },
         )
+        
+        # Extractor -> Product Agent
+        self.builder.add_edge("order_extractor", "product_agent")
 
         # Output directly to END since Guardrail is now at the front
         self.builder.add_edge("policy_agent", END)

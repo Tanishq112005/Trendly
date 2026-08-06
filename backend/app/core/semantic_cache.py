@@ -1,15 +1,15 @@
 import os
 import logging
-from langchain_redis import RedisVectorStore
+from langchain_pinecone import PineconeVectorStore
 from langchain_huggingface import HuggingFaceEndpointEmbeddings
+from pinecone import Pinecone, ServerlessSpec
 
 class SemanticCache:
     def __init__(self):
-        self.index_name = "trendly_faq_cache"
-        self.redis_url = os.getenv("REDIS_URI", "redis://localhost:6379/0")
-
+        self.index_name = "trendly-faq-cache"
+        self.pinecone_api_key = os.getenv("VECTOR_DB")
+        
         hf_api = os.getenv("HUGGING_FACE")
-
         if hf_api:
             self.embeddings = HuggingFaceEndpointEmbeddings(
                 repo_id="sentence-transformers/all-MiniLM-L6-v2",
@@ -20,21 +20,43 @@ class SemanticCache:
                 "No HUGGING_FACE api key provided for embeddings."
             )
 
-        self.vector_store = RedisVectorStore(
-            redis_url=self.redis_url,
+        if not self.pinecone_api_key:
+            raise ValueError("No VECTOR_DB api key provided for Pinecone.")
+
+        # Initialize Pinecone
+        pc = Pinecone(api_key=self.pinecone_api_key)
+        
+        # Check if index exists, else create it
+        if self.index_name not in pc.list_indexes().names():
+            logging.info(f"Creating Pinecone index '{self.index_name}'...")
+            pc.create_index(
+                name=self.index_name,
+                dimension=384,  # all-MiniLM-L6-v2 dimension
+                metric='cosine',
+                spec=ServerlessSpec(
+                    cloud='aws',
+                    region='us-east-1'
+                )
+            )
+            
+        # Connect to the index
+        self.vector_store = PineconeVectorStore(
             index_name=self.index_name,
-            embeddings=self.embeddings,
+            embedding=self.embeddings,
+            pinecone_api_key=self.pinecone_api_key
         )
-        logging.info("Connected to Redis Vector database successfully!")
+        
+        logging.info("Connected to Pinecone Vector database successfully!")
 
     async def check_cache(self, query: str, threshold: float = 0.82) -> str | None:
         try:
+            # Pinecone similarity search
             results = await self.vector_store.asimilarity_search_with_score(query, k=1)
             if results:
                 doc, score = results[0]
-                # Redis Langchain integration returns distances by default in most cases.
-                if score < (1.0 - threshold):
-                    logging.info(f"Semantic Cache HIT: Distance {score:.4f} for query '{query}'")
+                # Pinecone returns cosine similarity: higher is better
+                if score >= threshold:
+                    logging.info(f"Semantic Cache HIT: Score {score:.4f} for query '{query}'")
                     return doc.metadata.get("response")
 
             logging.info(f"Semantic Cache MISS for query '{query}'")

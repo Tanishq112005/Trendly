@@ -30,7 +30,8 @@ Known Customer Details:
 3. Be empathetic and professional."""
 
         sys_msg = SystemMessage(content=sys_msg_text)
-        response = self.ticket_llm.invoke([sys_msg] + state["messages"])
+        recent_messages = state["messages"][-10:] if len(state["messages"]) > 10 else state["messages"]
+        response = self.ticket_llm.invoke([sys_msg] + recent_messages)
 
         # Intercept PrepareTicket tool call for HITL
         if response.tool_calls:
